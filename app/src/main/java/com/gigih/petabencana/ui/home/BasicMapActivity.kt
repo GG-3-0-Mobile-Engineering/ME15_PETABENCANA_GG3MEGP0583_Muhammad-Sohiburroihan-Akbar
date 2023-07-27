@@ -14,8 +14,8 @@ import com.google.maps.android.compose.*
 
 private const val TAG = "BasicMapActivity"
 
-val singapore = LatLng(1.35, 103.87)
-val defaultCameraPosition = CameraPosition.fromLatLngZoom(singapore, 11f)
+val jakarta = LatLng(-6.2113664140089, 106.84790917979694)
+val defaultCameraPosition = CameraPosition.fromLatLngZoom(jakarta, 11f)
 
 @Composable
 fun GoogleMapView(

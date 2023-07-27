@@ -19,7 +19,7 @@ import com.google.android.gms.maps.model.LatLng
 @Composable
 fun DisasterList(
     bencanaList: List<GeometriesItem>,
-    onCardClicked: (LatLng) -> Unit
+    onCardClicked: (LatLng) -> Unit,
 ) {
 
     Column(

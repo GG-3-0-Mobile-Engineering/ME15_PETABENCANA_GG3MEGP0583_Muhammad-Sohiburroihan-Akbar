@@ -5,31 +5,39 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.gigih.petabencana.ui.settings.SettingsActivity
 import com.gigih.petabencana.ui.theme.PetaBencanaTheme
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SearchMenu(modifier: Modifier = Modifier) {
+fun SearchMenu(
+    modifier: Modifier = Modifier,
+    onQueryChange: (String) -> Unit,
+    onSearchSubmit: () -> Unit,
+) {
     val context = LocalContext.current
+    var query by remember { mutableStateOf("") }
+
 
     Column {
         TextField(
-            value = "",
-            onValueChange = {},
+            value = query,
+            onValueChange = { query = it },
             modifier = modifier
                 .padding(16.dp)
                 .fillMaxWidth()
@@ -66,90 +74,50 @@ fun SearchMenu(modifier: Modifier = Modifier) {
             ),
             placeholder = {
                 Text(text = stringResource(com.gigih.petabencana.R.string.cari_disini))
-            }
+            },
+            keyboardActions = KeyboardActions(
+                onDone = {
+                    // Call the onSearchSubmit callback when the user presses Enter
+                    onSearchSubmit()
+                }
+            ),
+            keyboardOptions = KeyboardOptions.Default.copy(
+                imeAction = ImeAction.Done // Set the IME action to Done
+            )
         )
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            FilterChip(
-                modifier = Modifier
-                    .width(100.dp)
-                    .height(40.dp),
-                selected = false,
-                onClick = { /*TODO*/ },
-                label = { Text(text = "Banjir") },
-                colors = FilterChipDefaults.filterChipColors(containerColor = Color.Green),
-                border = FilterChipDefaults.filterChipBorder(borderColor = Color.Transparent)
-            )
-            FilterChip(
-                modifier = Modifier
-                    .width(100.dp)
-                    .height(40.dp),
-                selected = false,
-                onClick = { /*TODO*/ },
-                label = { Text(text = "Kabut") },
-                colors = FilterChipDefaults.filterChipColors(containerColor = Color.White),
-                border = FilterChipDefaults.filterChipBorder(borderColor = Color.Transparent)
-            )
-            FilterChip(
-                modifier = Modifier
-                    .width(100.dp)
-                    .height(40.dp),
-                selected = false,
-                onClick = { /*TODO*/ },
-                label = { Text(text = "Badai") },
-                colors = FilterChipDefaults.filterChipColors(containerColor = Color.White),
-                border = FilterChipDefaults.filterChipBorder(borderColor = Color.Transparent)
-            )
+        onQueryChange(query)
+    }
+}
 
-//            ChipColors(
-//                onClick = { /*TODO*/ },
-//                colors = ChipDefaults.chipColors(backgroundColor = Color.White, contentColor = Color.Black),
-//                modifier = Modifier
-//                    .width(112.dp)
-//                    .height(40.dp)
-//            ) {
-//                Text(
-//                    text = stringResource(R.string.banjir),
-//                    textAlign = TextAlign.Center,
-//                    modifier = Modifier
-//                        .fillMaxWidth(),
-//                )
-//            }
-//            Spacer(modifier = Modifier.width(8.dp))
-//            Chip(
-//                onClick = { /*TODO*/ },
-//                colors = ChipDefaults.chipColors(backgroundColor = Color.White, contentColor = Color.Black),
-//                modifier = Modifier
-//                    .width(112.dp)
-//                    .height(40.dp)
-//            ) {
-//                Text(
-//                    text = stringResource(R.string.kabut),
-//                    textAlign = TextAlign.Center,
-//                    modifier = Modifier
-//                        .fillMaxWidth(),
-//                )
-//            }
-//            Spacer(modifier = Modifier.width(8.dp))
-//            Chip(
-//                onClick = { /*TODO*/ },
-//                colors = ChipDefaults.chipColors(backgroundColor = Color(0,136,12), contentColor = Color.White),
-//                modifier = Modifier
-//                    .width(112.dp)
-//                    .height(40.dp)
-//            ) {
-//                Text(
-//                    text = stringResource(R.string.badai),
-//                    textAlign = TextAlign.Center,
-//                    modifier = Modifier
-//                        .fillMaxWidth(),
-//                )
-//            }
-
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun FilterChipsRow(
+    selectedFilters: List<String>,
+    onFilterSelected: (String) -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+            .padding(top = 76.dp),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        val filters = listOf("flood", "earthquake", "volcano") // Add more disasters if needed
+        filters.forEach { filter ->
+            FilterChip(
+                modifier = Modifier
+                    .width(100.dp)
+                    .height(40.dp),
+                selected = selectedFilters.contains(filter),
+                onClick = { onFilterSelected(filter) },
+                label = { Text(text = filter) },
+                colors = if (selectedFilters.contains(filter)) {
+                    FilterChipDefaults.filterChipColors(containerColor = Color.Green)
+                } else {
+                    FilterChipDefaults.filterChipColors(containerColor = Color.White)
+                },
+                border = FilterChipDefaults.filterChipBorder(borderColor = Color.Transparent)
+            )
         }
     }
 }
@@ -158,6 +126,5 @@ fun SearchMenu(modifier: Modifier = Modifier) {
 @Composable
 fun DefaultPreview() {
     PetaBencanaTheme {
-        SearchMenu()
     }
 }
