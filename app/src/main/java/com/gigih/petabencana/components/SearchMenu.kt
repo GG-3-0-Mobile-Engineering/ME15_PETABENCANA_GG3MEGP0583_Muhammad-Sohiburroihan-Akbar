@@ -1,5 +1,6 @@
 package com.gigih.petabencana.components
 
+import android.content.Intent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -13,12 +14,18 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.gigih.petabencana.ui.settings.SettingsActivity
+import com.gigih.petabencana.ui.theme.PetaBencanaTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchMenu(modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+
     Column {
         TextField(
             value = "",
@@ -42,7 +49,10 @@ fun SearchMenu(modifier: Modifier = Modifier) {
                         .fillMaxHeight()
                         .clip(shape = RoundedCornerShape(50))
                         .background(Color.Green)
-                        .clickable { },
+                        .clickable {
+                            val intent = Intent(context, SettingsActivity::class.java)
+                            context.startActivity(intent)
+                        },
                     tint = Color.White,
                 )
             },
@@ -141,5 +151,13 @@ fun SearchMenu(modifier: Modifier = Modifier) {
 //            }
 
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun DefaultPreview() {
+    PetaBencanaTheme {
+        SearchMenu()
     }
 }

@@ -1,6 +1,7 @@
 package com.gigih.petabencana.components
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Card
 import androidx.compose.material3.Text
@@ -16,6 +17,7 @@ fun CardDisaster(
     img: String?,
     disaster_type: String?,
     description: String,
+    onClick: () -> Unit
 ) {
     val imageUrls = "https://bpsdm.dephub.go.id/v2/public/file_app/struktur_image/default.png"
 
@@ -25,6 +27,7 @@ fun CardDisaster(
             .padding(top = 16.dp)
             .width(453.dp)
             .height(110.dp)
+            .clickable(onClick = onClick)
     ) {
         Row {
             // Display the loaded image

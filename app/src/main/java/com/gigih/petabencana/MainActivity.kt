@@ -1,9 +1,11 @@
 package com.gigih.petabencana
 
 import android.os.Bundle
+import android.preference.PreferenceManager
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.fadeOut
@@ -24,17 +26,26 @@ import com.gigih.petabencana.data.BencanaResponse
 import com.gigih.petabencana.data.GeometriesItem
 import com.gigih.petabencana.data.UiState
 import com.gigih.petabencana.ui.ViewModelFactory
-import com.gigih.petabencana.ui.home.DIsasterViewModel
-import com.gigih.petabencana.ui.home.DisasterList
-import com.gigih.petabencana.ui.home.GoogleMapView
-import com.gigih.petabencana.ui.home.defaultCameraPosition
+import com.gigih.petabencana.ui.home.*
 import com.gigih.petabencana.ui.theme.PetaBencanaTheme
+import com.gigih.petabencana.utils.DarkMode
+import com.google.android.gms.maps.model.CameraPosition
 import com.google.maps.android.compose.rememberCameraPositionState
+import java.util.*
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val preferences = PreferenceManager.getDefaultSharedPreferences(applicationContext)
+        preferences.getString(
+            getString(R.string.pref_key_dark),
+            getString(R.string.pref_dark_follow_system)
+        )?.apply {
+            val mode = DarkMode.valueOf(this.uppercase(Locale.US))
+            AppCompatDelegate.setDefaultNightMode(mode.value)
+        }
         setContent {
+
             PetaBencanaTheme {
                 // A surface container using the 'background' color from the theme
                 Surface(
@@ -81,7 +92,10 @@ fun DisasterApp(
 
             BottomSheetScaffold(
                 sheetContent = { DisasterList(
-                    (bencanaResponse.result.objects?.output?.geometries ?: emptyList()) as List<GeometriesItem>
+                    (bencanaResponse.result.objects?.output?.geometries ?: emptyList()) as List<GeometriesItem>,
+                    onCardClicked = { coordinates ->
+                        cameraPositionState.position = CameraPosition.fromLatLngZoom(coordinates, 15f)
+                    }
                 ) },
                 scaffoldState = scaffoldState,
                 sheetShape = bottomSheetShape,
