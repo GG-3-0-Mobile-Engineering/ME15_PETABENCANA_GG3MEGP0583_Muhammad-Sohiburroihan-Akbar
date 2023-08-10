@@ -13,12 +13,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.gigih.petabencana.R
 import com.gigih.petabencana.components.CardDisaster
-import com.gigih.petabencana.data.GeometriesItem
+import com.gigih.petabencana.data.BencanaTable
 import com.google.android.gms.maps.model.LatLng
 
 @Composable
 fun DisasterList(
-    bencanaList: List<GeometriesItem>,
+    bencanaList: List<BencanaTable>,
     onCardClicked: (LatLng) -> Unit,
 ) {
 
@@ -36,13 +36,13 @@ fun DisasterList(
         LazyColumn {
             items(bencanaList) { bencana ->
                 CardDisaster(
-                    img = bencana.properties?.imageUrl,
+                    img = bencana.imageUrl,
                     disaster_type = bencana.type,
-                    description = bencana.properties?.text.toString(),
+                    description = bencana.title.toString(),
                     onClick = {
                         // Call the click handler with the selected location's coordinates
-                        val coordinates = LatLng(bencana.coordinates?.get(1) ?: 0.0,
-                            bencana.coordinates?.get(0) ?: 0.0
+                        val coordinates = LatLng(bencana.lat ?: 0.0,
+                            bencana.lng ?: 0.0
                         )
                         onCardClicked(coordinates)
                     }

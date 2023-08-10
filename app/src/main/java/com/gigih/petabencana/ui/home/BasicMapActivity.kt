@@ -6,7 +6,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import com.gigih.petabencana.data.GeometriesItem
+import com.gigih.petabencana.data.BencanaTable
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
@@ -22,7 +22,7 @@ fun GoogleMapView(
     modifier: Modifier = Modifier,
     cameraPositionState: CameraPositionState = rememberCameraPositionState(),
     onMapLoaded: () -> Unit = {},
-    markerDataList: List<GeometriesItem> = emptyList(),
+    markerDataList: List<BencanaTable> = emptyList(),
     content: @Composable () -> Unit = {}
 ) {
 
@@ -45,16 +45,16 @@ fun GoogleMapView(
         ) {
             markerDataList.forEach { markerData ->
                 val position = LatLng(
-                    markerData.coordinates?.get(1) ?: 0.0,
-                    markerData.coordinates?.get(0) ?: 0.0
+                    markerData.lat ?: 0.0,
+                    markerData.lng ?: 0.0
                 )
                 val markerState = rememberMarkerState(position = position)
                 Marker(
                     state = markerState,
                     // Set other properties of the marker as needed
                     // For example, you can set a title or icon for the marker
-                    snippet = markerData.properties?.disasterType,
-                    title = markerData.properties?.text ?: "",
+                    snippet = markerData.type,
+                    title = markerData.title ?: "",
                     icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)
                 )
             }

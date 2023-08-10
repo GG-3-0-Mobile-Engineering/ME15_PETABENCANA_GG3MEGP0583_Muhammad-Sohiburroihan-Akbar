@@ -1,6 +1,5 @@
 package com.gigih.petabencana.components
 
-import android.content.Intent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -21,7 +20,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.gigih.petabencana.ui.settings.SettingsActivity
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.gigih.petabencana.ui.theme.PetaBencanaTheme
 
 @Composable
@@ -29,10 +29,10 @@ fun SearchMenu(
     modifier: Modifier = Modifier,
     onQueryChange: (String) -> Unit,
     onSearchSubmit: () -> Unit,
+    navController: NavController = rememberNavController()
 ) {
     val context = LocalContext.current
     var query by remember { mutableStateOf("") }
-
 
     Column {
         TextField(
@@ -58,8 +58,7 @@ fun SearchMenu(
                         .clip(shape = RoundedCornerShape(50))
                         .background(Color.Green)
                         .clickable {
-                            val intent = Intent(context, SettingsActivity::class.java)
-                            context.startActivity(intent)
+                            navController.navigate("setting")
                         },
                     tint = Color.White,
                 )

@@ -6,7 +6,7 @@ import retrofit2.http.Query
 
 interface ApiService {
     @GET("reports?")
-    suspend fun getDisaster(): BencanaResponse
+    fun getDisaster(): retrofit2.Call<BencanaResponse>
 //    @GET("reports?timeperiod=604800")
 
     @GET("reports")

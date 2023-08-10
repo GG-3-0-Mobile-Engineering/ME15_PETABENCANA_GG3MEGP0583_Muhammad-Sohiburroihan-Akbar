@@ -1,11 +1,11 @@
 package com.gigih.petabencana
 
+import android.content.res.Configuration
 import android.os.Bundle
-import android.preference.PreferenceManager
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.appcompat.app.AppCompatDelegate
+import androidx.activity.viewModels
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.fadeOut
@@ -24,42 +24,63 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import com.gigih.petabencana.components.FilterChipsRow
 import com.gigih.petabencana.components.SearchMenu
-import com.gigih.petabencana.data.BencanaResponse
-import com.gigih.petabencana.data.GeometriesItem
+import com.gigih.petabencana.data.BencanaTable
 import com.gigih.petabencana.data.UiState
 import com.gigih.petabencana.ui.ViewModelFactory
 import com.gigih.petabencana.ui.home.DIsasterViewModel
 import com.gigih.petabencana.ui.home.DisasterList
 import com.gigih.petabencana.ui.home.GoogleMapView
 import com.gigih.petabencana.ui.home.defaultCameraPosition
+import com.gigih.petabencana.ui.settings.Settings
+import com.gigih.petabencana.ui.settings.SettingsViewModel
 import com.gigih.petabencana.ui.theme.PetaBencanaTheme
-import com.gigih.petabencana.utils.DarkMode
+import com.gigih.petabencana.utils.DataStoreUtil
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.maps.android.compose.rememberCameraPositionState
-import java.util.*
 
 class MainActivity : ComponentActivity() {
+    private val themeViewModel: SettingsViewModel by viewModels()
+    private lateinit var dataStoreUtil: DataStoreUtil
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val preferences = PreferenceManager.getDefaultSharedPreferences(applicationContext)
-        preferences.getString(
-            getString(R.string.pref_key_dark),
-            getString(R.string.pref_dark_follow_system)
-        )?.apply {
-            val mode = DarkMode.valueOf(this.uppercase(Locale.US))
-            AppCompatDelegate.setDefaultNightMode(mode.value)
+        dataStoreUtil = DataStoreUtil(applicationContext)
+
+        val systemTheme = when (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) {
+            Configuration.UI_MODE_NIGHT_YES -> { true }
+            Configuration.UI_MODE_NIGHT_NO -> { false }
+            else -> { false }
         }
         setContent {
+            val theme = dataStoreUtil.getTheme(systemTheme).collectAsState(initial = systemTheme)
 
-            PetaBencanaTheme {
+            PetaBencanaTheme(darkTheme = theme.value) {
                 // A surface container using the 'background' color from the theme
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    DisasterApp()
+                    val navController = rememberNavController()
+                    NavHost(navController = navController, startDestination = "home") {
+                        composable("home") {
+                            DisasterApp(
+                                navController = navController
+                            )
+                        }
+                        composable("setting") {
+                            Settings(
+                                dataStoreUtil = dataStoreUtil,
+                                themeViewModel = themeViewModel,
+                                navController = navController
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -70,8 +91,9 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun DisasterApp(
     viewModel: DIsasterViewModel = viewModel(
-        factory = ViewModelFactory(LocalContext.current)
+        factory = ViewModelFactory.getInstance(LocalContext.current)
     ),
+    navController: NavController = rememberNavController()
 ) {
     var isMapLoaded by remember { mutableStateOf(false) }
     // Observing and controlling the camera's state can be done with a CameraPositionState
@@ -101,33 +123,32 @@ fun DisasterApp(
             Log.d("DisasterScreen1", viewModel.fetchDisasterData().toString())
         }
         is UiState.Success -> {
-            val bencanaResponse = (disasterResponseState as UiState.Success<BencanaResponse>).data
+            val bencanaResponse = (disasterResponseState as UiState.Success<List<BencanaTable>>).data
             // Show success state
             Log.d("DisasterScreen2", "Success: $bencanaResponse")
 
             // Combine the filtering logic for both filters
             val filteredBencanaList = if (searchQuery.value.isBlank() && selectedFilters.isEmpty()) {
-                bencanaResponse.result.objects?.output?.geometries ?: emptyList()
+                bencanaResponse
             } else {
-                bencanaResponse.result.objects?.output?.geometries?.filter { bencana ->
+                bencanaResponse.filter { bencana ->
                     // Check if the disaster type contains the search query (case-insensitive)
-                    val matchesSearchQuery = bencana?.properties?.disasterType?.contains(searchQuery.value, ignoreCase = true) ?: false
+                    val matchesSearchQuery = bencana.instanceRegionCode?.contains(searchQuery.value, ignoreCase = true) ?: false
 
                     // Check if the disaster type is in the selected filters
-                    val matchesFilterChips = selectedFilters.isEmpty() || selectedFilters.contains(bencana?.properties?.disasterType)
+                    val matchesFilterChips = selectedFilters.isEmpty() || selectedFilters.contains(bencana.type)
 
                     matchesSearchQuery && matchesFilterChips
-                } ?: emptyList()
+                }
             }
 
             BottomSheetScaffold(
                 sheetContent = { DisasterList(
-//                    (bencanaResponse.result.objects?.output?.geometries ?: emptyList()) as List<GeometriesItem>,
-                    filteredBencanaList as List<GeometriesItem>,
-                    onCardClicked = { coordinates ->
-                        cameraPositionState.position = CameraPosition.fromLatLngZoom(coordinates, 15f)
-                    }
-                ) },
+                    filteredBencanaList
+                ) { coordinates ->
+                    cameraPositionState.position = CameraPosition.fromLatLngZoom(coordinates, 15f)
+                }
+                },
                 scaffoldState = scaffoldState,
                 sheetShape = bottomSheetShape,
                 sheetPeekHeight = 300.dp
@@ -139,8 +160,7 @@ fun DisasterApp(
                         onMapLoaded = {
                             isMapLoaded = true
                         },
-                        markerDataList = filteredBencanaList as List<GeometriesItem>
-//                        markerDataList = (bencanaResponse.result.objects?.output?.geometries ?: emptyList()) as List<GeometriesItem>
+                        markerDataList = filteredBencanaList
                     )
 
                     SearchMenu(
@@ -149,13 +169,13 @@ fun DisasterApp(
                             Log.d("testtt", searchQuery.value)
                         },
                         onSearchSubmit = {
-//                            viewModel.getDisasterByLocation(searchQuery.value)
                             // Hide the keyboard after the user presses Enter
                             keyboardController?.hide()
                             // Clear focus to dismiss the focus from the TextField
                             focusManager.clearFocus()
                             Log.d("Testtt", viewModel.getDisasterByLocation(searchQuery.value).toString())
                         },
+                        navController = navController
                     )
 
                     // Add FilterChips for different disasters

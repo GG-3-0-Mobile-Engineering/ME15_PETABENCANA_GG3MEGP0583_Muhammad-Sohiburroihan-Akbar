@@ -1,11 +1,29 @@
 package com.gigih.petabencana.utils
 
-import androidx.appcompat.app.AppCompatDelegate
+import android.content.Context
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.preferencesDataStore
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 
-enum class DarkMode(val value: Int) {
+class DataStoreUtil(private val context: Context) {
+    companion object {
+        private val Context.dataStore: DataStore<Preferences> by preferencesDataStore("settings")
 
-    FOLLOW_SYSTEM(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM),
-    ON(AppCompatDelegate.MODE_NIGHT_YES),
-    OFF(AppCompatDelegate.MODE_NIGHT_NO)
+        val THEME_KEY = booleanPreferencesKey("theme")
+    }
 
+    fun getTheme(isSystemDarkTheme: Boolean): Flow<Boolean> = context.dataStore.data
+        .map { preferences ->
+            preferences[THEME_KEY] ?: isSystemDarkTheme
+        }
+
+    suspend fun saveTheme(isDarkThemeEnabled: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[THEME_KEY] = isDarkThemeEnabled
+        }
+    }
 }
