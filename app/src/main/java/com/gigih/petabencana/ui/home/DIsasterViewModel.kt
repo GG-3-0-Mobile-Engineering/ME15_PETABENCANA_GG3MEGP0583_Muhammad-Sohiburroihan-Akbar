@@ -26,6 +26,9 @@ class DIsasterViewModel(private val bencanaRepository: BencanaRepository) : View
             // Observe the LiveData and update the MutableStateFlow accordingly
             disasterLiveData.observeForever { uiState ->
                 _disasterResponse.value = uiState
+
+                // Remove the observer when done
+                disasterLiveData.removeObserver { }
             }
         }
     }
